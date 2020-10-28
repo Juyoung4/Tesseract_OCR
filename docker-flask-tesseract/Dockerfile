@@ -2,6 +2,7 @@
 FROM ubuntu:18.04
 ENV TZ=US/Central
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+ENV PORT = 8080
 #ENV FLASK_APP=hello.py
 
 ENV LC_ALL=C.UTF-8
@@ -19,22 +20,26 @@ RUN apt-get update \
 
 RUN tesseract -v
 
-ADD . /home/app
-WORKDIR /home/app
-COPY requirements.txt ./
-COPY . .
+#ADD . /home/app
+#WORKDIR /home/app
+#COPY requirements.txt ./
+#COPY . .
+
+ENV APP_HOME /app
+WORKDIR $APP_HOME
+COPY . ./
 
 RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 RUN python3 -c "import nltk; nltk.download('punkt')"
 
-ENV FLASK_APP=app.py
+ENV FLASK_APP=main.py
 
 RUN export LC_ALL=C.UTF-8
 RUN export LANG=C.UTF-8
 
 VOLUME ["/data"]
-EXPOSE 80
-#CMD ["python3", "OCRRun.py"]
-#CMD ["flask", "run"]
-CMD ["python3", "app.py"]
+EXPOSE 8080
+
+#CMD ["python3", "main.py"]
+CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 30 main:app
