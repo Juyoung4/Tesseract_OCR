@@ -10,9 +10,10 @@
 <img src="https://img.shields.io/badge/python%20-%2314354C.svg?&style=for-the-badge&logo=python&logoColor=white"/>
 
 ----
-### [간단한 Tesseract_OCR API 생성](https://www.notion.so/2-OCR-API-a1f0e473b5974a889096701e6fe6118e)
+### 1. [간단한 Tesseract_OCR API 생성](https://www.notion.so/2-OCR-API-a1f0e473b5974a889096701e6fe6118e)
 * examples
+![pytesseract](https://miro.medium.com/max/2400/1*KlZcUBffBhsr_JhXYZi4Lw@2x.jpeg)
 
-![pytesseract](https://s3.amazonaws.com/stackabuse/media/pytesseract-simple-python-optical-character-recognition-6.png)
 
-### [Tesseract 성능 개선](https://github.com/Juyoung4/Tesseract_OCR/tree/main/Tesseract_impove)
+### 2. [Tesseract 성능 개선](https://github.com/Juyoung4/Tesseract_OCR/tree/main/Tesseract_impove)
+![Tesseract](https://s3.amazonaws.com/stackabuse/media/pytesseract-simple-python-optical-character-recognition-6.png)
