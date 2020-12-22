@@ -1,73 +1,21 @@
-# Use the official Python image.
-# https://hub.docker.com/_/python
-FROM python:3.7
-
-# Copy local code to the container image.
+# install base image for debian 9
+FROM ubuntu:18.04 # OS 이미지 다운로드 및 실행
+ENV TZ=US/Central # OS에 TIMEZONE 설정 -> 꼭 필요
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ >
+/etc/timezone
+# 필요한 package들 모두 설치한다(OS에 설치해야 할 패키지들)
+RUN apt-get update \
+ && apt-get install tesseract-ocr -y
+RUN tesseract -v
+# 로컬에 있는 코드들 (requirements.txt나 main.py 등등)을 ubuntu os에 복사
 ENV APP_HOME /app
 WORKDIR $APP_HOME
 COPY . ./
-
-RUN apt-get update \
-    && apt-get install -y \
-        build-essential \
-        cmake \
-        git \
-        wget \
-        unzip \
-        yasm \
-        pkg-config \
-        libswscale-dev \
-        libtbb2 \
-        libtbb-dev \
-        libjpeg-dev \
-        libpng-dev \
-        libtiff-dev \
-        libavformat-dev \
-        libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-
-#Install tesseract
-WORKDIR /
-ENV OPENCV_VERSION="4.1.1"
-RUN wget https://github.com/opencv/opencv/archive/${OPENCV_VERSION}.zip \
-&& unzip ${OPENCV_VERSION}.zip \
-&& mkdir /opencv-${OPENCV_VERSION}/cmake_binary \
-&& cd /opencv-${OPENCV_VERSION}/cmake_binary \
-&& cmake -DBUILD_TIFF=ON \
-  -DBUILD_opencv_java=OFF \
-  -DWITH_CUDA=OFF \
-  -DWITH_OPENGL=ON \
-  -DWITH_OPENCL=ON \
-  -DWITH_IPP=ON \
-  -DWITH_TBB=ON \
-  -DWITH_EIGEN=ON \
-  -DWITH_V4L=ON \
-  -DBUILD_TESTS=OFF \
-  -DBUILD_PERF_TESTS=OFF \
-  -DCMAKE_BUILD_TYPE=RELEASE \
-  -DCMAKE_INSTALL_PREFIX=$(python3.7 -c "import sys; print(sys.prefix)") \
-  -DPYTHON_EXECUTABLE=$(which python3.7) \
-  -DPYTHON_INCLUDE_DIR=$(python3.7 -c "from distutils.sysconfig import get_python_inc; print(get_python_inc())") \
-  -DPYTHON_PACKAGES_PATH=$(python3.7 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())") \
-  .. \
-&& make install \
-&& rm /${OPENCV_VERSION}.zip \
-&& rm -r /opencv-${OPENCV_VERSION}
-RUN ln -s \
-  /usr/local/python/cv2/python-3.7/cv2.cpython-37m-x86_64-linux-gnu.so \
-  /usr/local/lib/python3.7/site-packages/cv2.so
-
-RUN apt-get --fix-missing update && apt-get --fix-broken install && apt-get install -y poppler-utils && apt-get install -y tesseract-ocr && \
-    apt-get install -y libtesseract-dev && apt-get install -y libleptonica-dev && ldconfig && apt install -y libsm6 libxext6 && apt install -y python-opencv
-
-# Install production dependencies.
+# 필요한 python 라이브러리들을 설치한다(requirements.txt)
+RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
-RUN python -c "import nltk; nltk.download('punkt')"
-
-# Run the web service on container startup. Here we use the gunicorn
-# webserver, with one worker process and 8 threads.
-# For environments with multiple CPU cores, increase the number of workers
-# to be equal to the cores available.
-EXPOSE 80
-CMD ["python", "app.py"]
+ENV FLASK_APP=main.py
+# flask에서 사용할 port 지정
+EXPOSE 8080
+# gunicorn은 python wsgi http server이다. 한번에 8명을 동시에 받을 수 있다
+CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 30 main:app
